@@ -130,7 +130,6 @@ class KML
       dy = @coords[1][0]-@coords[0][0]
       dx = @coords[1][1]-@coords[0][1]
       radangle=Math.atan(dy/dx)
-      puts dy
       degangle= radangle * (180/Pi)
       remainder=degangle % 5
       if degangle < 0
@@ -305,7 +304,7 @@ def writeToXlsWithClass(kmlObject, mode="straight", filename="blank",fillBlanks=
           puts "swapped"
         end
       end
-      puts title,desc
+      #puts title,desc
 
       locationTuple=point.coords 
       slidesarray = parseSlideRange(desc)[0]
@@ -316,8 +315,8 @@ def writeToXlsWithClass(kmlObject, mode="straight", filename="blank",fillBlanks=
           print "The slide with categorization #{cat} and title #{title} (#{index}) could not be parsed, and has been skipped"
         else
           #puts seenSlides
-          puts index
-          puts cat
+          #puts index
+          #puts cat
           classification=Classification.new(cat).to_s
           angle=linedirectory[classification]
           if angle.class != NilClass and desc[0..desc.index(". ")].downcase.include? "location"
