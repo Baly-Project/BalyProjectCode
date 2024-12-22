@@ -171,6 +171,7 @@ class BalyClassesTester < BalyTester
       assert_equal false, @g.inRange?('DF.019-100')
       assert_equal false, @g.inRange?('DF.006-10')
       assert_equal true, @g.inRange?('DF.002')
+      assert_equal true, @d.inRange?('CD.55')
     end
   end
 
@@ -535,11 +536,6 @@ class PrettyCommonFunctionsTester < BalyTester
       assert_equal [['BG.001'], 'BG.001', 'BG.001'], parseSlideRange('BG.1')
     end
   end
-
-  class GenerateSortingNumbersTester < PrettyCommonFunctionsTester
-    def test_random
-    end
-  end
 end
 
 ##########################################################################################
@@ -599,15 +595,12 @@ class IndexConverterTester < BalyTester
       # Second is less typical, being a nonstandard size
       @d2 = 'B48.001-12'
       @c2 = 'FL.089-100'
-      # Third is a one to one
-      @d3 = 'B13.001'
-      @c3 = 'F.054'
     end
     def test_hundreds
       baseclassification = Classification.new 'B48.113'
       basereturn = Classification.new('CH.001')
       (100).times do |i|
-        assert translateRangeElement(baseclassification,@d1,@c1).to_s,basereturn.to_s
+        assert_equal translateRangeElement(baseclassification,@d1,@c1).to_s,basereturn.to_s
         increaseClassification baseclassification
         increaseClassification basereturn
       end
@@ -620,6 +613,152 @@ class IndexConverterTester < BalyTester
         increaseClassification baseclassification
         increaseClassification basereturn
       end
+    end
+  end
+  class ScanRangeHashTester < IndexConverterTester
+    def setup
+      # copy sample hashes
+      @sampleException = {
+        "B03.093" => "C.094",
+        "B03.094" => "C.093"    
+      }
+      @sampleFull = {
+        "B44.001" => "EM.67",
+        "B44.002-009" => "EM.69-76",
+        "B44.010-015" => "EM.78-83",
+        "B44.016" => "EN.02",
+        "B44.017-018" => "EM.91-92",
+        "B44.019" => "EN.03",
+        "B44.020" => "EM.84",
+        "B44.21-30" => "EM.93-102",
+        "B44.031-032" => "EM.89-90",
+        "B44.033" => "EM.85",
+        "B44.034" => "EM.88",
+      }
+    end
+    def test_excepts
+      in1 = Classification.new 'B03.093'
+      out1 = Classification.new 'C.094'
+      assert_equal out1.to_s,scanRangeHash(in1,@sampleException).to_s
+      assert_equal in1.to_s,scanRangeHash(out1,@sampleException,true).to_s
+      in2 = Classification.new 'B03.094'
+      out2 = Classification.new 'C.093'
+      assert_equal out2.to_s,scanRangeHash(in2,@sampleException).to_s
+      assert_equal in2.to_s,scanRangeHash(out2,@sampleException,true).to_s
+    end
+
+    def test_full
+      in1 = Classification.new 'B44.001'
+      out1 = Classification.new 'EM.067'
+      assert_equal out1.to_s,scanRangeHash(in1,@sampleFull).to_s
+      assert_equal in1.to_s,scanRangeHash(out1,@sampleFull,true).to_s
+      in2 = Classification.new 'B44.004'
+      out2 = Classification.new 'EM.071'
+      assert_equal out2.to_s,scanRangeHash(in2,@sampleFull).to_s
+      assert_equal in2.to_s,scanRangeHash(out2,@sampleFull,true).to_s
+      test_cases = {
+        'B44.002' => 'EM.69',
+        'B44.003' => 'EM.70',
+        'B44.004' => 'EM.71',
+        'B44.005' => 'EM.72',
+        'B44.006' => 'EM.73',
+        'B44.007' => 'EM.74',
+        'B44.008' => 'EM.75',
+        'B44.009' => 'EM.76'
+      }
+  
+      test_cases.each do |input_code, expected_output_code|
+        in_classification = Classification.new(input_code)
+        out_classification = Classification.new(expected_output_code)
+  
+        # Test forward mapping
+        assert_equal out_classification.to_s, scanRangeHash(in_classification, @sampleFull).to_s
+        # Test reverse mapping
+        assert_equal in_classification.to_s, scanRangeHash(out_classification, @sampleFull, true).to_s
+      end
+    end
+  end
+  class IndexConverterFuncTester < IndexConverterTester
+    def setup
+      @test_cases = {
+        'B49.196' => 'CS.015',
+        'B49.197' => 'CS.016',
+        'B49.198' => 'CS.017',
+        'B49.199' => 'CS.018',
+        'B49.200' => 'CS.019',
+        'B49.201' => 'CS.020',
+        'B49.202' => 'CS.021',
+        'B49.203' => 'CS.022',
+        'B49.204' => 'CS.023',
+        'B49.205' => 'CS.024',
+        'B49.206' => 'CS.025',
+        'B49.207' => 'CS.026',
+        'B49.208' => 'CS.027',
+        'B49.209' => 'CS.028',
+        'B49.210' => 'CS.029',
+        'B49.211' => 'CS.030',
+        'B49.212' => 'CS.031',
+        'B49.213' => 'CS.032',
+        'B49.214' => 'CS.033',
+        'B49.215' => 'CS.034',
+        'B49.216' => 'CS.035',
+        'B49.217' => 'CS.036',
+        'B49.218' => 'CS.037',
+        'B49.219' => 'CS.038',
+        'B49.220' => 'CS.039',
+        'B49.221' => 'CS.040',
+        'B49.222' => 'CS.041',
+        'B49.223' => 'CS.042',
+        'B49.224' => 'CS.043',
+        'B49.225' => 'CS.044',
+        'B49.226' => 'CS.045',
+        'B49.227' => 'CS.046',
+        'B49.228' => 'CS.047',
+        'B49.229' => 'CS.048',
+        'B49.230' => 'CS.049',
+        'B49.231' => 'CS.050',
+        'B49.232' => 'CS.051',
+        'B49.233' => 'CS.052',
+        'B49.234' => 'CS.053',
+        'B49.235' => 'CS.054',
+        'B49.236' => 'CS.055',
+        'B49.237' => 'CS.056',
+        'B49.238' => 'CS.057',
+        'B49.239' => 'CS.058',
+        'B49.240' => 'CS.059',
+        'B49.241' => 'CS.060'
+      }  
+    end
+    def test_string_in
+      @test_cases.each do |key,value|
+        assert_equal value, indexConverter(key).to_s
+        assert_equal key, indexConverter(value).to_s
+      end
+    end
+    def test_classification_in_classification_out
+      @test_cases.each do |key,value|
+        assert_equal Classification.new(value).to_s, indexConverter(Classification.new(key)).to_s
+        assert_equal Classification.new(key).to_s, indexConverter(Classification.new(value)).to_s
+      end
+    end
+  end
+  class GenerateSortingNumbersTester < IndexConverterTester
+    def setup
+      @sampledata = {
+        59080 => 'B45.769',
+        59081 => 'B45.770',
+        59082 => 'B45.771',
+        59083 => 'B45.772',
+        96001 => 'B49.082',
+        96002 => 'B49.083',
+        96003 => 'B49.084'
+      }
+    end
+    def test_all
+      @sampledata.each do |key,value|
+        assert_equal key, generateSortingNumbers([value])[0]
+      end
+      assert_equal @sampledata.keys, generateSortingNumbers(@sampledata.values)
     end
   end
 end

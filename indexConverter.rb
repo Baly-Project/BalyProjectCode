@@ -14,7 +14,7 @@
 #one day we will have one that reverses this.
 Bsorthash={"B01-41" => "BHashNorm", "B42.0-43.9" => "BhashRange", "B44.0-44.1" => "EKtoENhash",
            "B44.2-44.8"=>"BhashRange", "B44.9" => "B44to45hash","B45.0-45.9" => "B44to45hash",
-           "B46.0-46.9" => "B46hash","B47.0-47.9" => 'B47hash',
+           'B46.0-46.9' => "B46hash","B47.0-47.9" => 'B47hash',
            "B48.0-49.3"=> 'B48to49hash'}
 #then we make a similar hash for Baly numbers, but we use the sorting numbers so we can capture the ranges
 BalySorthash={"1000-42200" => 'ConvertHashNorm','43000-50200' => 'BhashRange','99000-103084' => 'BhashRange','104000-111200' => 'BhashRange','121000-124200' => 'BhashRange',
@@ -53,7 +53,12 @@ def expandBhashRange(brange,includeLeadingZeros=true)
     noBrange=brange[1..]
     #check that we are indeed dealing with a range, if it's a single collection, we return a singleton array
     unless noBrange.include? "-"
-        return [brange]
+        value = noBrange.to_i
+        if value < 10
+            return ["B"+value.to_s,"B0"+value.to_s]
+        else
+            return [brange]
+        end
     end
     #split by the dash to get the starts and ends of our range
     (start,last) = noBrange.split "-"
@@ -127,7 +132,7 @@ def getBsorthashkey(slide)
         puts "This slide has no decimal point. Make sure to include the full indexing"
     end
 end
-
+# This function takes a classification, and identifies the proper hash key based on the sorting number
 def getBalySorthashkey(classification)
     sortingNumber=classification.sortingNumber
     ans= ""
@@ -142,6 +147,7 @@ def getBalySorthashkey(classification)
         return ans
     end
 end
+# This function helps parse the simple integer ranges in BalySorthash
 def intRangeIncludes?(range,element)
     if range.include? "-"
         (lowstr,highstr)=range.split "-"
@@ -177,44 +183,51 @@ end
 # function here to do just that.
 
 def translateRangeElement(slideindx,domain,codomain)
-    #split left and right side of each range
-    (dleft,dright)=domain.split("-")
-    (cleft,cright)=codomain.split("-")
-    #since right sides can omit the hundreds place, we fill it in 
-    #if it is missing and convert to integer
-    if dright.length < 3
-        dright=((dleft.split(".")[1].to_i/100).to_s+dright).to_i
-    end
-    if cright.length < 3
-        cright=((cleft.split(".")[1].to_i/100).to_s+cright).to_i
-    end
-    # filter each piece to the numbers
-    dombase=dleft.split(".")[1].to_i
-    cobase=cleft.split(".")[1].to_i
-    slidenum=slideindx.number
-    #check that the slide is actually in the range
-    # this will help us catch errors in larger fxns that pass faulty arguments
-    unless slideindx.inRange? domain
-        raise StandardError.new "slide #{slideindx.to_s} is outside domain"
+    if domain.include? "-"  
+        #split left and right side of each range
+        (dleft,dright)=domain.split("-")
+        (cleft,cright)=codomain.split("-")
+        #since right sides can omit the hundreds place, we fill it in 
+        #if it is missing and convert to integer
+        
+        if dright.length < 3
+            dright=((dleft.split(".")[1].to_i/100).to_s+dright).to_i
+        end
+        if cright.length < 3
+            cright=((cleft.split(".")[1].to_i/100).to_s+cright).to_i
+        end
+        # filter each piece to the numbers
+        dombase=dleft.split(".")[1].to_i
+        cobase=cleft.split(".")[1].to_i
+        slidenum=slideindx.number
+        #check that the slide is actually in the range
+        # this will help us catch errors in larger fxns that pass faulty arguments
+        unless slideindx.inRange? domain
+            raise StandardError.new "slide #{slideindx.to_s} is outside domain"
+        else 
+            #puts dright,dombase,cright,cobase
+            if dright.to_i-dombase != cright.to_i-cobase
+                
+                raise StandardError.new "domain (#{domain}) and codomain are different sizes"
+            end
+        end
+        if dombase != cobase
+            scale=cobase-dombase
+            tlatednum=(slidenum+scale).to_s
+            while tlatednum.length < 3
+                tlatednum = "0"+tlatednum
+            end
+        elsif dombase == cobase
+            tlatednum=slidenum
+        end
+        newprefix=cleft.split(".")[0]
+        newslide=Classification.new([newprefix,tlatednum.to_i])
+        return newslide
     else 
-        #puts dright,dombase,cright,cobase
-        if dright.to_i-dombase != cright.to_i-cobase
-            
-            raise StandardError.new "domain (#{domain}) and codomain are different sizes"
+        if Classification.new(domain).to_s == slideindx.to_s
+            return Classification.new codomain
         end
     end
-    if dombase != cobase
-        scale=cobase-dombase
-        tlatednum=(slidenum+scale).to_s
-        while tlatednum.length < 3
-            tlatednum = "0"+tlatednum
-        end
-    elsif dombase == cobase
-        tlatednum=slidenum
-    end
-    newprefix=cleft.split(".")[0]
-    newslide=Classification.new([newprefix,tlatednum.to_i])
-    return newslide
 end
 
 =begin #testing
@@ -233,9 +246,9 @@ def scanRangeHash(slideindx,activehash,invert=false)
     #print slidestring
     #print activehash.keys
     if activehash.keys.include? slidestring
-        newslide=Classification.new(activehash[slidestring])
+        newslide = Classification.new(activehash[slidestring])
     else
-        rng= ""
+        rng = ""
         activehash.keys.each do |key|
             if slideindx.inRange? key
                 rng=key
@@ -258,9 +271,9 @@ puts scanB47hash('B47.005')
 =end
 
 #this function currently has been tested on all slides mentioned in classificationData
-def indexConverter(slide,outputform= 'String')
+def indexConverter(slide)
     if slide.class == String
-        slideindx=Classification.new(slide)
+        slideindx = Classification.new(slide)
         slidestring=slide
         #print "a string was input"
     elsif slide.class == Classification
