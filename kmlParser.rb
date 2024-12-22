@@ -129,7 +129,7 @@ class KML
       end
       dy = @coords[1][0]-@coords[0][0]
       dx = @coords[1][1]-@coords[0][1]
-      radangle=Math.atan(dy/dx)
+      radangle=Math.atan(dx/dy)
       degangle= radangle * (180/Pi)
       remainder=degangle % 5
       if degangle < 0
