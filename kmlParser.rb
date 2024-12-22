@@ -2,7 +2,6 @@
 #make sure you're in the right directory when you run this 
 # or it won't be able to find the file
 require_relative 'indexConverter.rb'
-#a purely original attempt
 
 class Slide
   def addGeodata()
@@ -22,149 +21,184 @@ class String
   end
 end
 
-#filename="UnitedKingdom.kml"
-
-#This function reads a kml file and returns a series of hashes containing all the 
-# relevant information. It indexes each placemark by an integer, which is used as 
-# a key for that info in each hash           
-def stripInfo(kmlFilename)
-  collectioninfo=Array.new
-
-  titles=Hash.new
-  descriptions=Hash.new
-  locations=Hash.new
-  lines=Hash.new
-
-  #Determine which file to read
-  filename=kmlFilename
-
-#define control variables
-  num=0
-  header=false
-  cordsread=false
-  lineread=false
-  linecords=Array.new
-  doctitle= "Title Field Blank"
-
-#open file
-  file=File.open(filename)
-
-  index=0
-  cordnum=0
-#read file one line at a time (master loop)
-  File.readlines(file).each do |rawline|
-    #we begin by collecting all the important file and collection info and putting it into an array
-
-    #first we clean any non-standard space characters out of the string
-    line=rawline.cleanSpaces
-    #Our first task is to collect the title of each entry
-    #every title includes "<name>" and ends with "<\name>"
-    if line.include? "<name>" and header==false
-      if line.include? "</name>"
-        endline=line.rindex "<"
-      else 
-        endline=line.rindex "\n"
-      end
-      #titles including special characters have additional identifiers that must be removed 
-      if line.include? "CDATA"
-        splitline=line[21...endline-3]
- 
-      #the normal titles get cleaned here  
-      else splitline=line[12...endline]
-      end
-
-      #items at the beginning and end of collections begin "(BXX)"
-      #this also must be removed
-      if splitline.include? "(B"
-        splitline=splitline[6...]
-      end
-      title=splitline
-      titles[index] = title
+class KML
+  # A class to read KML files and make the data accessible to the later functions
+  def initialize(filename)
+    @title= ""
+    @points=[]
+    @lines=[]
+    if filename[-4..-1] == ".kml"
+      instring = File.read(filename)
+    else 
+      instring=filename
     end
-    
-    #we now collect the collection name. This will be the first element of the list we return
-    if header==true
-      start=line.index ">"
-      start=start+1
-      finish=line.rindex "<"
-      doctitle=line[start...finish]
-      header=false
-    end 
+    parseKML(instring)
+  end
 
-    if line.include? "<Document>"
-      header=true
-    end
+  def points
+    return @points
+  end
 
-    #we begin with descriptions
-    #search for our keyword
-    if line.include? "<description>"
-      endline=line.rindex "<"
-      #split the line
-      if line.include? "CDATA" #if the line contains special characters, we need to remove more
-        splitline=line[28...endline-3]
-      else
-        splitline=line[19...endline]
-      end
-      activeDesc=splitline
-      #reference our hashkeys list and create an entry in the descriptions hash
-      descriptions[index]=activeDesc
-    end
+  def lines
+    return @lines
+  end
 
-    #we then perform a simiilar process with the coordinates
+  def title
+    return @title
+  end
 
-  
-    if cordsread==true
-      cords=line[..-4]
-      if lineread==false
-        locations[index]=cords.lstrip!
-        cordsread=false
-      else
-        if cordnum < 2
-          linecords.push cords.lstrip!
-          cordnum+=1
+  def assembleAnglesHash
+    linehash = Hash.new
+    @lines.each do |line|
+      (slide,required)=line.title.split(" ")
+      if required.downcase == "angle"
+          cat=Classification.new(parseSlideRange(slide)[0][0]).to_s
+        if cat.class == NilClass
+          print "The angle line for slide #{cat} could not be parsed, and has been skipped"
+        elsif cat.include? "ERROR"
+          print "The angle line for slide #{cat} could not be parsed, and has been skipped"
         else
-          lines[index] = linecords
-          cordsread=false
+          linehash[cat]=line.angle
         end
-      end 
-    end
-
-    if line.include? "<coordinates>"
-      cordsread=true
-      cordnum=0
-    end
-    
-    if line.include? "<LineString>"
-      lineread=true
-      linecords=[]
-    end
-
-    #when we reach the end of an entry, we advance the index
-    if line.include? "</Placemark>"
-      if lineread
-        lineread=false
-      else 
-        index=index+1
       end
-      puts "Working, current index #{index}"
+    end
+    return linehash
+  end
+  class Placemark #Consisting of Point and Line subclasses, Placemarks are the basic unit of KML files
+    def initialize(instring)
+      @title = ""
+      @description = ""
+      @coords=[]
+      @coordsNext=false  
+      lines=instring.split("\n")
+      lines.each do |line|
+        parseAttrs line
+      end
+    end
+
+    def parseAttrs(line)
+      if line.include? "<name>"
+        @title = cleanline line
+      elsif line.include? "<description>"
+        @description = cleanline line
+      elsif line.include? "<coordinates>"
+        @coordsNext = true
+      elsif line.include? "</coordinates>"
+        @coordsNext = false
+      elsif @coordsNext
+        bigcords=line.split ","
+        latitude=bigcords[1].to_f
+        longitude=bigcords[0].lfullstrip.to_f
+        if @coords.to_s.length > 3
+          (prevLat,prevLong)=@coords
+          @coords=[[prevLat,prevLong],[latitude,longitude]]
+        else
+          @coords=[latitude,longitude]
+        end
+      end
+    end
+
+    def cleanline(line)
+      start=line.index ">"
+      start+=1
+      last=line.rindex "<"
+      return line[start...last].fullstrip
+    end
+
+    def title
+      return @title
+    end
+
+    def description
+      return @description
+    end
+
+    def coords
+      return @coords
     end
   end
-  file.close()
-  return[doctitle,titles,descriptions,locations,lines]
+  class Point < Placemark
+  # This is basically the 'plainest' version of a placemark, and only has common attributes
+  # but is a subclass in order to preserve the natural hierarchy that KML uses
+  end
+  class Line < Placemark
+    Pi = 3.141592653
+    def angle
+      if @coords[0][0]==@coords[1][0]
+        return "0 degrees N"
+      end
+      dy = @coords[1][0]-@coords[0][0]
+      dx = @coords[1][1]-@coords[0][1]
+      radangle=Math.atan(dx/dy)
+      degangle= radangle * (180/Pi)
+      remainder=degangle % 5
+      if degangle < 0
+        degangle=degangle+360
+      end
+      if remainder > 2
+        rounded = degangle-remainder+5
+      else
+        rounded =  degangle - remainder
+      end
+      if dy < 0
+        rounded= (rounded+180) % 360
+      end
+      return rounded.to_i.to_s + " degrees " + get_angle_direction(rounded.to_i)
+    end
+    private
+    def get_angle_direction(degrees)
+      remainder=(degrees+23) % 45
+      sum=(degrees-remainder + 68)
+      case sum
+        when (0..45)
+          dir = "N"
+        when (46..90)
+          dir = "NE"
+        when (91..135)
+          dir = "E"
+        when (136..180)
+          dir = "SE"
+        when (180..225)
+          dir = "S"
+        when (226..270)
+          dir = "SW"
+        when (271..315)
+          dir = "W"
+        when (316..360)
+          dir = "NW"
+        else dir = ""   
+      end
+      return dir
+    end
+  end
+
+  private
+  def parseKML(instring)
+    tempstring= ""
+    reading = false
+    lines=instring.split "\n"
+    lines.each do |line|
+      if line.include? "</Placemark>"
+        reading = false
+        if tempstring.include? "<LineString>"
+          newline=Line.new tempstring
+          @lines.push newline
+        elsif tempstring.include? "<Point>"
+          newpoint=Point.new tempstring
+          @points.push newpoint
+        end
+        tempstring=String.new
+      elsif reading
+        tempstring+=line+"\n"
+      elsif line.include? "<name>" and @title.to_s.length == 0
+        @title=line[line.index(">")+1...line.rindex("<")]
+      elsif line.include? "<Placemark>"
+        reading = true
+      end
+    end
+  end
 end
-
-
-#puts allinfo
-
-=begin
-for i in 1..allinfo[0].length
-
- if allinfo[1][allinfo[0][i]].class == String
-  #puts "the "+i.to_s+"th description is a string" 
-  puts "TITLE "+allinfo[0][i]+" HAS DESCRIPTION "+allinfo[1][allinfo[0][i]]
- end
-end
-=end 
+ 
 def splitLocations (stringLocation)
   if stringLocation.class != String
     return ["there has been an error","like actually"]
@@ -179,7 +213,7 @@ def splitLocations (stringLocation)
 end 
 
 
-def writeToXlsWithClass(bigarray, mode="straight", filename="blank",fillBlanks=true)
+def writeToXlsWithClass(kmlObject, mode="straight", filename="blank",fillBlanks=true)
   #this function makes heavy use of the spreadsheet package. To install, type "gem install spreadsheet" into your terminal (windows)
   # or visit the source at https://rubygems.org/gems/spreadsheet/versions/1.3.0?locale=en
   require "spreadsheet" 
@@ -189,22 +223,20 @@ def writeToXlsWithClass(bigarray, mode="straight", filename="blank",fillBlanks=t
   #Now we define a mode. Each mode will direct the function to a different loop to produce different types of data.
   #"straight" mode keeps data organized by location, ex. Baly Cottage => B43.32-53,location
   #"CatNum" mode interprets each range and re-organizes it to read B43.32 => Baly Cottage, location
-
-
-
+  
   #we now create our spreadsheet file
   book=Spreadsheet::Workbook.new
   mainsheet=book.create_worksheet
   
   #we then collect the title of the group and name our sheet after it
-  collectionTitle=bigarray[0]
+  collectionTitle=kmlObject.title
   mainsheet.name = collectionTitle
 
   #we define a disclaimer to populate the top left cell, identifying that it was produced by code
-  disclaimer= "This is an automatically generated spreadsheet titled \'#{collectionTitle}\' Please review the information before copying into permanent data storage."
+  disclaimer= "This is an automatically generated spreadsheet titled '#{collectionTitle}' Please review the information before copying into permanent data storage."
   mainsheet[0,0] = disclaimer
   
-  if mode=="straight"
+  if mode == "straight"
 
     #then we make titles for each column
     mainsheet[1,0]="Title"
@@ -214,69 +246,103 @@ def writeToXlsWithClass(bigarray, mode="straight", filename="blank",fillBlanks=t
 
     #with our title and disclaimer made, we move into our main loop
     #the writing will take place one row at a time, and will be based on the list of keys (bigarray[1])
-
-    bigarray.length.times do |i|
+    points=kmlObject.points
+    finalindex=0
+    points.length.times do |i|
       #gather info
-      index=i
-      title = bigarray[1][index]
-      description=bigarray[2][index]
-      location=bigarray[3][index]
-      
-      #while most of the data is ready to input, the locations are still a string tuple.
-      #we must split this into its parts before entry
-
-      locationTuple = splitLocations location
-
+      point=kmlObject.points[i]
+      title = point.title
+      description = point.description
+      location = point.coords
       #populate info
-      mainsheet[i+2,0]=title
-      mainsheet[i+2,1]=description
-      mainsheet[i+2,2]=locationTuple[0]
-      mainsheet[i+2,3]=locationTuple[1]
-    end 
+      mainsheet[i+2,0] = title
+      mainsheet[i+2,1] = description
+      mainsheet[i+2,2] = location[0]
+      mainsheet[i+2,3] = location[1]
+      finalindex=i
+    end
+    
+    
+    lines=kmlObject.lines
+    finalindex+=4
+    mainsheet[finalindex] = ["Line Title","Line Description","Latitude 1","Longitude 1","Latitude 2","Longitude 2", "Angle Generated"] 
+    finalindex+=1
+    lines.length.times do |i|
+      #define object
+      line = lines[i]
+      #gather info
+      title = line.title
+      description = line.description
+      startLocation = line.coords[0]
+      endlocation = line.coords[1]
+      angle=line.angle.to_s+" degrees"
+      #populate info
+      mainsheet[finalindex+i][0] = title
+      mainsheet[finalindex+i][1] = description
+      mainsheet[finalindex+i][2] = startLocation[0]
+      mainsheet[finalindex+i][3] = startLocation[1]
+      mainsheet[finalindex+i][4] = endlocation[0]
+      mainsheet[finalindex+i][5] = endlocation[1]
+      mainsheet[finalindex+i][6] = angle
+    end
   end
 
   if mode == "CatNum"
     seenSlides=Hash.new
-    #Loop through the array
-    bigarray[1].length.times do |index|
-      title= bigarray[1][index]
-      desc = bigarray[2][index]
-      if desc.class==NilClass
+    points=kmlObject.points
+    linedirectory=kmlObject.assembleAnglesHash
+    #Loop through the points 
+    points.length.times do |index|
+      point = points[index]
+      title = point.title
+      desc = point.description
+      if desc.length == 0
         raise StandardError.new "Kml entry at index #{index} with title #{title} does not have a description"
-      elsif desc.hasDirection? and title.include? "."
+      elsif title.include? "."
         if title.index(".") < 4
           (title,desc)=swapSlideIdentifier(title,desc)
           puts "swapped"
         end
       end
-      puts title,desc
-      if desc.class != NilClass
-        location=bigarray[3][index]
-        locationTuple=splitLocations location 
-        slidesarray = parseSlideRange(desc)[0]
-        print slidesarray
-        slidesarray.each do |cat|
-          if cat.class == NilClass
-            print "The slide with categorization #{cat} and title #{title} (#{index}) could not be parsed, and has been skipped"
-          elsif cat.include? "ERROR"
-            print "The slide with categorization #{cat} and title #{title} (#{index}) could not be parsed, and has been skipped"
-          else
-            #puts seenSlides
-            puts index
-            puts cat
-            classification=Classification.new(cat).to_s
-            if seenSlides.include? classification
-              slide=seenSlides[classification]
-              addLocationToSlide(slide,locationTuple,title,desc)
-            else  
-              slide=Slide.new(classification)
-              addLocationToSlide(slide,locationTuple,title,desc)
-              altId=indexConverter(slide.getindex)
-              if altId.class == Classification
-                slide.addAltID(altId)
-              end
-              seenSlides[classification]=slide
+      #puts title,desc
+
+      locationTuple=point.coords 
+      slidesarray = parseSlideRange(desc)[0]
+      slidesarray.each do |cat|
+        if cat.class == NilClass
+          print "The slide with categorization #{cat} and title #{title} (#{index}) could not be parsed, and has been skipped"
+        elsif cat.include? "ERROR"
+          print "The slide with categorization #{cat} and title #{title} (#{index}) could not be parsed, and has been skipped"
+        else
+          #puts seenSlides
+          #puts index
+          #puts cat
+          classification=Classification.new(cat).to_s
+          angle=linedirectory[classification]
+          if angle.class != NilClass and desc[0..desc.index(". ")].downcase.include? "location"
+            if desc[0..desc.index(". ")].include? "location"
+              parts=desc.split("location")
+            elsif desc[0..desc.index(". ")].include? "Location"
+              parts=desc.split("Location")
             end
+            runningdesc= ""
+            parts.insert(1,"location at "+angle)
+            parts.length.times do |i|
+              runningdesc += parts[i]
+            end
+            desc=runningdesc
+          end
+          if seenSlides.include? classification
+            slide=seenSlides[classification]
+            addLocationToSlide(slide,locationTuple,title,desc)
+          else  
+            slide=Slide.new(classification)
+            addLocationToSlide(slide,locationTuple,title,desc)
+            altId=indexConverter(slide.getindex)
+            if altId.class == Classification
+              slide.addAltID(altId)
+            end
+            seenSlides[classification]=slide
           end
         end
       end
@@ -322,6 +388,7 @@ def swapSlideIdentifier(title,description)
   description=slideID+" "+description
   return [title,description]
 end
+
 
 def addLocationToSlide(slide,locationTuple,title,desc)
   puts "Description: #{desc}"
@@ -374,6 +441,9 @@ def stripData(desc)
     end
     return [angledata,0 ]
   end
+end
+
+def findAngleDirection(angle)
 end
 
 def formatspreadsheet(sheet)

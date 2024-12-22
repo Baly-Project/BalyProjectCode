@@ -3,13 +3,15 @@
 ***
 ## How to Open and Run in a Terminal
 * ****Install Ruby****
+  - Mac instructions
+    
     Open a terminal window, and type the following commands 
     ```sh
     echo 'if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi' >> ~/.zshrc
     source ~/.zshrc
 
-    rbenv install 3.3.0
-    rbenv global 3.3.0
+    rbenv install 3.3.5
+    rbenv global 3.3.5
     ```
 
     Now Ruby version 3.3 should be installed and set as default. To make sure everything is right, type 
@@ -18,12 +20,18 @@
     ```
     and the output should be something like this 
     ```sh
-    ruby 3.3.0 (2023-12-25 revision 5124f9ac75) [x86_64-darwin20]
+    ruby 3.3.5 (2023-12-25 revision 5124f9ac75) [x86_64-darwin20]
     ```
-    Now we install the Spreadsheet package with the command
-    ```sh
-    gem install spreadsheet -v 1.3.0
-    ```
+  - Windows instructions
+    
+    Download the installer at [https://rubyinstaller.org/](https://rubyinstaller.org/)
+
+  - Linux instructions
+
+  Then we install dependencies with the command
+  ```sh
+  bundle install
+  ```
 * ****Download Program****
 
     At the top of this (the main) webpage for the project, click the button titled 'Code' and a dropdown will appear. If you do not have a github account, press the option to download it as a zip file, and then unzip it on your computer and put the folder somewhere convenient to find.
