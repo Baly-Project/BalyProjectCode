@@ -390,7 +390,7 @@ class Classification
                 return false
             end
         else #if it is a single slide, we check if it is the right slide
-            return @stringform == range
+            return self.to_s == Classification.new(range).to_s
         end
     end
 end
