@@ -205,6 +205,81 @@ All of the following functions are methods for the JsonSample class.
   - **Description**
     This function simplifies the process of writing new spreadsheets by acting as a sort of inverse to `readIndexData`. It takes an array of row arrays and writes them into a new spreadsheet, with options to supply custom headers.
 
+## File: `kmlParser.rb`
+### Class Extensions
+#### Slide Extensions
+- ##### `addGeodata`
+  - **Dependencies**
+  Uses the `geocoder` gem for geographic data
+  - **Description**
+  Adds basic city,region, and country info from the geocoder gem. 
+#### String Extensions
+- ##### `hasDirection?`
+  - **Description** 
+  Detects whether a string has directional information keywords.
+### Classes
+- #### KML Class
+  - **Description**
+    Takes a KML file and represents the data as a series of placemarks, where each placemark is either a point or a directional line. No dependencies.
+  - #### `points, lines, title`
+    Accessor functions for basic data
+  - #### `assembleAnglesHash`
+    Makes a hash of string classifications to angle measurements from lines
+  - #### Subclasses
+    - ##### Placemark
+      Generic class for map items, stores universal data like title, description, and coordinates, all available via accessor functions
+    - ##### Point
+      Specific class for point objects, which inherit all their qualities from Placemark.
+    - ##### Line
+      Specific class for line objects, which inherit all the qualities from Placemark, and add a function to compute the angle between its coordinates.
+### Functions
+- #### `writeToXlsWithClass`
+  - **Dependencies**
+    Uses the `spreadsheet` gem, and the [KML](#kml-class), [Slide](#slide), and [Classification](#classification-class) classes. Uses functions [`swapSlideIdentifier`](#swapslideidentifier), [`addLocationToSlide`](#addlocationtoslide), [`formatspreadsheet`](#formatspreadsheet), [`formatSlideData`](#formatslidedata),[`formatCoords`](#formatcoords) from kmlParser.rb, `parseSlideRange` and `generateUniqueFilename` from `prettyCommonFunctions.rb`, and `indexConverter` from `indexConverter.rb`.
+  - **Description** 
+    Large function that converts geospatial data from the KML class object to the spreadsheet object.
+  - **Settings**
+    - `mode`: string option either "straight" (default) or "catnum". "Straight gives a simple placemark-by placemark representation, while catnum groups by slide and groups the data of multiple placemarks.
+    - `filename`: string option for custom named files. Default setting is "blank" for a randomized filename.
+    - `fillBlanks`: boolean option to include all slides between the ones mentioned in the KML file. True includes blank spaces for slides that had no info added.
+- #### swapSlideIdentifier
+  - **Dependecies**
+    Depends only on the [`fullstrip`](#fullstrip) string method from `balyClasses.rb`
+  - **Description**
+    To allow for slide identifiers to be in descriptions and titles, this function removes an identifier from the title and adds it to the description so that it can be read.
+- #### addLocationToSlide
+  - **Dependencies**
+    The [Slide](#slide) class, and [`stripData`](#stripdata).
+  - **Description**
+    A single function to handle all location inputs to slides, it decides whether the input is a specific or general location and adds it appropriately.
+- #### stripData
+  - **Dependencies**
+    [`hasDirection?`](#hasdirection) and [`is_integer?`](#is_integer) string methods
+  - **Description**
+    Parses angle data or notes from a point's description.
+- #### formatspreadsheet
+  - **Dependencies**
+    `spreadsheet` gem.
+  - **Description**
+    Adds proper headings to the first row of a spreadsheet object.
+- #### formatSlideData
+  - **Dependencies**
+    [Slide](#slide) class
+  - **Description**
+    Reads a slide and produces an array of all the relevant info in spreadsheet order.
+- #### formatCoords
+  - **Description**
+    Reads an array of coordinates and returns the proper string representation
+- #### readXLScolumn
+  - **Dependencies**
+    `spreadsheet` gem.
+  - **Description**
+    Takes a spreadsheet, worksheet number, and column number, and collects the information in that column into an array.
+- #### writeXLSfromColArray
+  - **Dependencies**
+    `spreadsheet` gem, and `generateUniqueFilename`.
+  - **Description**
+    Takes a nested array of columns and writes the data to a spreadsheet file.
 
 ## File: `balyClasses.rb`
 
