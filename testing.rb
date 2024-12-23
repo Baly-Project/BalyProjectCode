@@ -767,91 +767,89 @@ end
 # kmlParser.rb
 
 class KmlParserTester < BalyTester
+  def setup
+    simplekml = "<Document> \n <name>Simple Title</name> \n  <Placemark>\n      <name>Simple Title</name>\n      <description>Sample description</description> \n      <styleUrl>#icon-1899-0288D1</styleUrl>\n      <Point>\n        <coordinates>\n          2,1,0\n        </coordinates>\n      </Point>\n    </Placemark> \n          <Placemark> \n <name>BG.06 Angle</name>\n <styleUrl>#line-000000-1200-nodesc</styleUrl>\n  <LineString>\n  <tessellate>1</tessellate>\n <coordinates>\n 2,1,0 \n   3,2,0 \n  </coordinates> \n  </LineString> \n </Placemark> \n </Document>"
+    samplekml1 = "<?xml?>
+    <kml>
+      <Document>
+        <name>BG - Kermanshah and Bisutun</name>
+        <Style>
+          <IconStyle>
+            <color>ffd18802</color>
+            <scale>1</scale>
+            <Icon>
+              <href>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+            </Icon>
+            <hotSpot>
+          </IconStyle>
+          <LabelStyle>
+            <scale>0</scale>
+          </LabelStyle>
+        </Style>
+        <Placemark>
+          <name>Kermanshah</name>
+          <description>BG.001-06</description>
+          <styleUrl>#icon-1899-0288D1</styleUrl>
+          <Point>
+            <coordinates>
+              47.0777685,34.3276924,0
+            </coordinates>
+          </Point>
+        </Placemark>
+        <Placemark>
+          <name>BG.06 - Kurds on Route to Kermanshah</name>
+          <description>Possible Location. The mountains in the background allow us to place this image northwest of Kermanshah, facing the mountains. However the location given is not precise beyond this, and just a guess at a spot along a major road.</description>
+          <styleUrl>#icon-1899-0288D1</styleUrl>
+          <Point>
+            <coordinates>
+              47.0810041,34.3881913,0
+            </coordinates>
+          </Point>
+        </Placemark>
+        <Placemark>
+          <name>BG.06 Angle</name>
+          <styleUrl>#line-000000-1200-nodesc</styleUrl>
+          <LineString>
+            <tessellate>1</tessellate>
+            <coordinates>
+              47.0810041,34.3881913,0
+              47.0317336,34.4425962,0
+            </coordinates>
+          </LineString>
+        </Placemark>
+        <Placemark>
+          <name>BG.29 - Inscription of Darius I</name>
+          <description>Estimated Location</description>
+          <styleUrl>#icon-1899-0288D1</styleUrl>
+          <Point>
+            <coordinates>
+              47.4363682,34.390528,0
+            </coordinates>
+          </Point>
+        </Placemark>
+        <Placemark>
+          <name>BG.29 Angle</name>
+          <styleUrl>#line-000000-1200-nodesc</styleUrl>
+          <LineString>
+            <tessellate>1</tessellate>
+            <coordinates>
+              47.4363682,34.390528,0
+              47.4362534,34.3904965,0
+            </coordinates>
+          </LineString>
+        </Placemark>
+      </Document>
+    </kml>"
+    IO.write('testing.kml', simplekml)
+    @simplekml = KML.new('testing.kml')
+    File.delete('testing.kml')
+
+    IO.write('testing.kml', samplekml1)
+    @kml = KML.new('testing.kml')
+    @stringkml = KML.new(samplekml1)
+    File.delete('testing.kml')
+  end
   class KMLTester < KmlParserTester
-    def setup
-      tempkml1 = Tempfile.new(['testobj1', '.kml'])
-      simplekml = "<Document> \n <name>Simple Title</name> \n  <Placemark>\n      <name>Simple Title</name>\n      <description>Sample description</description> \n      <styleUrl>#icon-1899-0288D1</styleUrl>\n      <Point>\n        <coordinates>\n          2,1,0\n        </coordinates>\n      </Point>\n    </Placemark> \n          <Placemark> \n <name>BG.06 Angle</name>\n <styleUrl>#line-000000-1200-nodesc</styleUrl>\n  <LineString>\n  <tessellate>1</tessellate>\n <coordinates>\n 2,1,0 \n   3,2,0 \n  </coordinates> \n  </LineString> \n </Placemark> \n </Document>"
-      samplekml1 = "<?xml?>
-      <kml>
-        <Document>
-          <name>BG - Kermanshah and Bisutun</name>
-          <Style>
-            <IconStyle>
-              <color>ffd18802</color>
-              <scale>1</scale>
-              <Icon>
-                <href>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
-              </Icon>
-              <hotSpot>
-            </IconStyle>
-            <LabelStyle>
-              <scale>0</scale>
-            </LabelStyle>
-          </Style>
-          <Placemark>
-            <name>Kermanshah</name>
-            <description>BG.001-06</description>
-            <styleUrl>#icon-1899-0288D1</styleUrl>
-            <Point>
-              <coordinates>
-                47.0777685,34.3276924,0
-              </coordinates>
-            </Point>
-          </Placemark>
-          <Placemark>
-            <name>BG.06 - Kurds on Route to Kermanshah</name>
-            <description>Possible Location. The mountains in the background allow us to place this image northwest of Kermanshah, facing the mountains. However the location given is not precise beyond this, and just a guess at a spot along a major road.</description>
-            <styleUrl>#icon-1899-0288D1</styleUrl>
-            <Point>
-              <coordinates>
-                47.0810041,34.3881913,0
-              </coordinates>
-            </Point>
-          </Placemark>
-          <Placemark>
-            <name>BG.06 Angle</name>
-            <styleUrl>#line-000000-1200-nodesc</styleUrl>
-            <LineString>
-              <tessellate>1</tessellate>
-              <coordinates>
-                47.0810041,34.3881913,0
-                47.0317336,34.4425962,0
-              </coordinates>
-            </LineString>
-          </Placemark>
-          <Placemark>
-            <name>BG.29 - Inscription of Darius I</name>
-            <description>Estimated Location</description>
-            <styleUrl>#icon-1899-0288D1</styleUrl>
-            <Point>
-              <coordinates>
-                47.4363682,34.390528,0
-              </coordinates>
-            </Point>
-          </Placemark>
-          <Placemark>
-            <name>BG.29 Angle</name>
-            <styleUrl>#line-000000-1200-nodesc</styleUrl>
-            <LineString>
-              <tessellate>1</tessellate>
-              <coordinates>
-                47.4363682,34.390528,0
-                47.4362534,34.3904965,0
-              </coordinates>
-            </LineString>
-          </Placemark>
-        </Document>
-      </kml>"
-      IO.write('testing.kml', simplekml)
-      @simplekml = KML.new('testing.kml')
-      File.delete('testing.kml')
-
-      IO.write('testing.kml', samplekml1)
-      @kml = KML.new('testing.kml')
-      @stringkml = KML.new(samplekml1)
-      File.delete('testing.kml')
-    end
-
     def test_basic
       # Simple case
       assert_equal 'Simple Title', @simplekml.title
@@ -890,6 +888,226 @@ class KmlParserTester < BalyTester
       assert_equal 'BG.29 Angle', line2.title
       assert_equal '320 degrees NW', line1.angle
       assert_equal '255 degrees W', line2.angle
+    end
+  end
+  class SplitLocationsTester < KmlParserTester
+    # KML files store
+    def test_normal
+      assert_equal ['5678','1234'], splitLocations("1234,5678")
+    end
+    def test_large 
+      assert_equal ['10.0040230005','1234567899'], splitLocations('1234567899,10.0040230005')
+    end
+  end
+  
+  class WriteToXlsWithClassTester
+  end
+
+  class SwapSlideIdentifierTester < KmlParserTester
+    def test_basic
+      title = 'B32.042 - Basic title stuff'
+      desc = 'Any description will do'
+      exp_title = 'Basic title stuff'
+      exp_desc = 'B32.042 Any description will do'
+      assert_equal [exp_title, exp_desc], swapSlideIdentifier(title, desc)
+    end
+
+    def test_bad_format
+      title1 = 'B32.042-Basic title stuff'
+      desc = 'Any description will do'
+      exp_title = 'Basic title stuff'
+      exp_desc = 'B32.042 Any description will do'
+      assert_equal [exp_title, exp_desc], swapSlideIdentifier(title1, desc)
+
+      title2 = 'B32.042- Basic title stuff'
+      assert_equal [exp_title, exp_desc], swapSlideIdentifier(title2, desc)
+
+      title3 = 'B32.042 -Basic title stuff'
+      assert_equal [exp_title, exp_desc], swapSlideIdentifier(title3, desc)
+    end
+  end
+
+  class AddLocationToSlideTester < KmlParserTester
+    def setup
+      @descriptions = {
+        'specific' => [
+          'A.001 Likely location at 270 degrees W',
+          'B.042 Estimated location at 185 degrees S',
+          'A.010 likely location at 70 degrees E',
+          'A.014 likely location facing up. Notable notes are noted previously',
+          'A.083 likely location at 10 degrees N. Structures in background are the fountains (sebils) of Qasim Pasha and Qayt Bay.'
+        ],
+        'general' => [
+          'BG.017,18, 23, 24',
+          'AC.042-51',
+          'QA.079-90. Notes on this as well'
+        ]
+      }
+    end
+
+    def test_specific_loc
+      @descriptions['specific'].each do |desc|
+        slide = Slide.new "B42.241"
+        addLocationToSlide(slide,['24.12345','99.54321'],'A Title',desc)
+        loc = slide.specificLocation
+        assert_equal 'A Title', loc.title
+        assert (['estimated', 'likely'].include? loc.precision),"Precision value #{loc.precision} not in range"
+        assert loc.angle.degrees > -2
+        assert (['N','NE','E','SE','S','SW','W','NW','UP','DOWN'].include? loc.angle.direction), "Direction value #{loc.angle.direction} not in range"
+      end
+    end
+    def test_all
+      @descriptions.each do |key, array|
+        array.each do |desc|
+          slide = Slide.new 'B21.053'
+          addLocationToSlide(slide,['24.12345','99.54321'],'A Title',desc)
+          if key == 'specific'
+            loc = slide.specificLocation
+          elsif key == 'general'
+            loc = slide.generalLocation
+            assert_equal 'A Title', loc.name
+          end
+          assert_equal ['24.12345','99.54321'], loc.coords
+          if desc.include? ". "
+            assert loc.notes.length > 3
+          end
+        end
+      end
+    end
+  end
+
+  class StripDataTester < KmlParserTester
+    def test_empty
+      descs = ['BG.017,18, 23, 24','AC.042-51']
+      descs.each do |desc|
+        assert_equal '', stripData(desc)
+      end
+    end
+    def test_only_notes
+      desc = 'QA.079-90. Notes on this as well'
+      assert_equal 'Notes on this as well', stripData(desc)
+    end
+    def test_angles
+      desc1 = 'A.001 Likely location at 270 degrees W'
+      assert_equal [' Likely location at 270 degrees W',0],stripData(desc1)
+      desc2 =  'B.042 Estimated location at 185 degrees S'
+      assert_equal [' Estimated location at 185 degrees S',0],stripData(desc2)
+      desc3 =  'A.010 likely location at 70 degrees E'
+      assert_equal [' likely location at 70 degrees E',0], stripData(desc3)
+    end
+    def test_specific_notes
+      desc1 = 'A.014 likely location facing up. Notable notes are noted previously'
+      assert_equal [' likely location facing up','Notable notes are noted previously'],stripData(desc1)
+      desc2 = 'A.083 likely location at 10 degrees N. Structures in background are the fountains (sebils) of Qasim Pasha and Qayt Bay.'
+      assert_equal [' likely location at 10 degrees N','Structures in background are the fountains (sebils) of Qasim Pasha and Qayt Bay.'], stripData(desc2)
+    end
+  end
+  class FormatSpreadsheetTester < KmlParserTester
+    def test_all
+      require 'spreadsheet'
+      book = Spreadsheet::Workbook.new
+      sheet = book.create_worksheet
+      formatspreadsheet(sheet)
+      assert_equal ["Sorting Number","Slide Title","Baly Cat","VRC Cat","General Place Name","General Coordinates","Specific Coordinates","Direction","Precision","Notes","City","Region","Country"], Array.new(sheet.row(1))
+    end
+  end
+
+  class FormatSlideDataTester < KmlParserTester
+    def test_basic
+      slide = Slide.new 'A.001'
+      slide.addAltID('B01.001')
+      slide.addTitle('Jerusalem')
+      slide.addLocation([[10, 20], 'Place Name', 'Some notes'],false,false)
+      slide.addLocation([[2, 2], 'possible location at 0 degrees N', 'Some medium notes', 'Some medium title'],true,false)
+      expArray = [
+        1001,
+        'Some medium title',
+        'A.001','B01.001',
+        'Place Name',
+        "(10,20)",
+        "(2,2)",
+        '0 degrees N',
+        'possible',
+        'Some notesSome medium notes', 0, 0, 0
+      ]
+      assert_equal expArray,formatSlideData(slide)
+    end
+  end
+
+  class FormatCoordsTester < KmlParserTester
+    def test_basic
+      coords = [45.123, 78.456]
+      result = formatCoords(coords)
+      assert_equal('(45.123,78.456)', result)
+    end
+  end
+
+  class ReadXLSCcolumnTester < KmlParserTester
+    def test_simple
+      require 'spreadsheet'
+      # Create test XLS file
+      book = Spreadsheet::Workbook.new
+      sheet = book.create_worksheet
+      sheet[0,0] = "A1"
+      sheet[1,0] = "A2" 
+      sheet[2,0] = "A3"
+      test_file = Tempfile.create(['test_one.xls','.xls'])
+      book.write test_file.path
+      # Test reading first column
+      result = readXLScolumn(test_file, 0, 0)
+      assert_equal ["A1", "A2", "A3"], result
+    end
+
+    def test_full_sheet
+      require 'spreadsheet'
+      # Create test XLS file
+      book = Spreadsheet::Workbook.new
+      sheet = book.create_worksheet
+      sheet.row(0).replace ['1','2','3']
+      sheet.row(1).replace ['4','5','6']
+      sheet.row(2).replace ['7','8','9']
+      test_file = Tempfile.create(['test_two.xls','.xls'])
+      book.write test_file.path
+      assert_equal ['1','4','7'], readXLScolumn(test_file, 0, 0)
+      assert_equal ['2','5','8'], readXLScolumn(test_file, 0, 1)
+      assert_equal ['3','6','9'], readXLScolumn(test_file, 0, 2)
+    end
+  end
+
+  class WriteXLSfromColArrayTester < KmlParserTester
+    def test_with_headers
+      require 'spreadsheet'
+
+      test_file = Tempfile.create ['test','.xls']
+      headers = ["Col1", "Col2"]
+      data = [["A1", "A2"], ["B1", "B2"]]
+
+      writeXLSfromColArray(test_file.path, data, headers)
+
+      book = Spreadsheet.open(test_file.path)
+      sheet = book.worksheet(0)
+
+      assert_equal headers[0], sheet[0,0]
+      assert_equal headers[1], sheet[0,1]
+      assert_equal "A1", sheet[1,0] 
+      assert_equal "A2", sheet[2,0]
+      assert_equal "B1", sheet[1,1]
+      assert_equal "B2", sheet[2,1]
+    end
+    def test_write_xls_empty_data
+      require 'spreadsheet'
+      tfile = Tempfile.create(['empty_test','.xls'])
+      headers = ["Col1", "Col2"]
+      data = []
+    
+      writeXLSfromColArray(tfile.path, data, headers)
+
+      book = Spreadsheet.open(tfile.path)
+      sheet = book.worksheet(0)
+      assert_equal headers[0], sheet[0,0]
+      assert_equal headers[1], sheet[0,1]
+      assert_nil sheet[1,0]
+      assert_nil sheet[1,1]
     end
   end
 end

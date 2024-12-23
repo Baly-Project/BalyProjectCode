@@ -242,40 +242,40 @@ All of the following functions are methods for the JsonSample class.
     - `mode`: string option either "straight" (default) or "catnum". "Straight gives a simple placemark-by placemark representation, while catnum groups by slide and groups the data of multiple placemarks.
     - `filename`: string option for custom named files. Default setting is "blank" for a randomized filename.
     - `fillBlanks`: boolean option to include all slides between the ones mentioned in the KML file. True includes blank spaces for slides that had no info added.
-- #### swapSlideIdentifier
+- #### `swapSlideIdentifier`
   - **Dependecies**
     Depends only on the [`fullstrip`](#fullstrip) string method from `balyClasses.rb`
   - **Description**
     To allow for slide identifiers to be in descriptions and titles, this function removes an identifier from the title and adds it to the description so that it can be read.
-- #### addLocationToSlide
+- #### `addLocationToSlide`
   - **Dependencies**
     The [Slide](#slide) class, and [`stripData`](#stripdata).
   - **Description**
     A single function to handle all location inputs to slides, it decides whether the input is a specific or general location and adds it appropriately.
-- #### stripData
+- #### `stripData`
   - **Dependencies**
     [`hasDirection?`](#hasdirection) and [`is_integer?`](#is_integer) string methods
   - **Description**
     Parses angle data or notes from a point's description.
-- #### formatspreadsheet
+- #### `formatspreadsheet`
   - **Dependencies**
     `spreadsheet` gem.
   - **Description**
     Adds proper headings to the first row of a spreadsheet object.
-- #### formatSlideData
+- #### `formatSlideData`
   - **Dependencies**
     [Slide](#slide) class
   - **Description**
     Reads a slide and produces an array of all the relevant info in spreadsheet order.
-- #### formatCoords
+- #### `formatCoords`
   - **Description**
     Reads an array of coordinates and returns the proper string representation
-- #### readXLScolumn
+- #### `readXLScolumn`
   - **Dependencies**
     `spreadsheet` gem.
   - **Description**
     Takes a spreadsheet, worksheet number, and column number, and collects the information in that column into an array.
-- #### writeXLSfromColArray
+- #### `writeXLSfromColArray`
   - **Dependencies**
     `spreadsheet` gem, and `generateUniqueFilename`.
   - **Description**

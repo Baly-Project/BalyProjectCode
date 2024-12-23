@@ -6,13 +6,13 @@ require_relative 'indexConverter.rb'
 class Slide
   def addGeodata()
     require 'geocoder'
-    coords=getCoordinates
+    coords = getCoordinates
     puts coords
-    geodata=Geocoder.address(coords).split(",")
+    geodata = Geocoder.address(coords).split(",")
     if [@city,@region,@country]!=[0,0,0]
       puts "WARNING: Existing Geodata is being overwritten on slide #{getIndex}"
     end
-    (@city,@region,@country)=[geodata[-5],geodata[-3],geodata[-1]]
+    (@city,@region,@country) = [geodata[-5],geodata[-3],geodata[-1]]
   end
 end
 class String
@@ -317,20 +317,20 @@ def writeToXlsWithClass(kmlObject, mode="straight", filename="blank",fillBlanks=
           #puts seenSlides
           #puts index
           #puts cat
-          classification=Classification.new(cat).to_s
-          angle=linedirectory[classification]
+          classification = Classification.new(cat).to_s
+          angle = linedirectory[classification]
           if angle.class != NilClass and desc[0..desc.index(". ")].downcase.include? "location"
             if desc[0..desc.index(". ")].include? "location"
-              parts=desc.split("location")
+              parts = desc.split("location")
             elsif desc[0..desc.index(". ")].include? "Location"
-              parts=desc.split("Location")
+              parts = desc.split("Location")
             end
-            runningdesc= ""
+            runningdesc = ""
             parts.insert(1,"location at "+angle)
             parts.length.times do |i|
               runningdesc += parts[i]
             end
-            desc=runningdesc
+            desc = runningdesc
           end
           if seenSlides.include? classification
             slide=seenSlides[classification]
@@ -391,16 +391,13 @@ end
 
 
 def addLocationToSlide(slide,locationTuple,title,desc)
-  puts "Description: #{desc}"
   data=stripData(desc)
   if data.class != Array
     notes=data
     slide.addLocation([locationTuple,title,notes],false,false)
-    puts "worked! added loc. #{title}"
   elsif data[0].class != NilClass
     slide.addLocation([locationTuple,data[0],data[1],title],true,false)
   end
-  
 end
   
 def stripData(desc)
@@ -443,178 +440,59 @@ def stripData(desc)
   end
 end
 
-def findAngleDirection(angle)
-end
-
 def formatspreadsheet(sheet)
   fields=["Sorting Number","Slide Title","Baly Cat","VRC Cat","General Place Name","General Coordinates","Specific Coordinates","Direction","Precision","Notes","City","Region","Country"]
   for i in [0..fields.length]
     sheet[1,i]=fields[i]
-#    format=Spreadsheet::Format.new :width => fields[i].length
-#    sheet.col(i).default_format=format
   end
 end
+
 def formatSlideData(slide)
-  balyid=slide.getindex("Baly").to_s
-  vrcid=slide.getindex("VRC").to_s
-  sortingNumber=slide.getSortNum
-  generalLoc=slide.generalLocation
+  balyid = slide.getindex("Baly").to_s
+  vrcid = slide.getindex("VRC").to_s
+  sortingNumber = slide.getSortNum
+  generalLoc = slide.generalLocation
   if generalLoc != 0
-    locationName= generalLoc.name
+    locationName = generalLoc.name
     genCoords = formatCoords(generalLoc.coords)
   else
-    locationName= ""
+    locationName = ""
     genCoords = ["",""]
   end
-  specificLoc=slide.specificLocation
-  if specificLoc!=0
-    title=specificLoc.title
+  specificLoc = slide.specificLocation
+  if specificLoc != 0
+    title = specificLoc.title
     specCoords = formatCoords(specificLoc.coords)
-    specAngle=specificLoc.angle.to_s
-    precision=specificLoc.precision
+    specAngle = specificLoc.angle.to_s
+    precision = specificLoc.precision
   else
-    title= ""
-    specCoords=["",""]
-    specAngle= ""
+    title = ""
+    specCoords =["",""]
+    specAngle = ""
   end
-  resultarray=[sortingNumber,title,balyid,vrcid,locationName,genCoords,specCoords,specAngle,precision]
-  notes= ""
+  resultarray = [sortingNumber,title,balyid,vrcid,locationName,genCoords,specCoords,specAngle,precision]
+  notes = ""
   [generalLoc,specificLoc].each do |loc|
     if loc.class < Location
-      eachnote=loc.notes
+      eachnote = loc.notes
       if eachnote != 0
         notes += eachnote
       end
     end
   end
   resultarray.push notes
-  resultarray+=slide.getGeodata
+  resultarray += slide.getGeodata
   resultarray.each do |element|
     if element == 0
-      element= ""
+      element = ""
     end
   end
   return resultarray
 end
 def formatCoords(coordinateArray)
-  latitude=coordinateArray[0]
-  longitude=coordinateArray[1]
+  latitude = coordinateArray[0]
+  longitude = coordinateArray[1]
   return "(#{latitude},#{longitude})"
-end
-def writeToXls(bigarray, mode="straight", filename="blank")
-  #this function makes heavy use of the spreadsheet package. To install, type "gem install spreadsheet" into your terminal (windows)
-  # or visit the source at https://rubygems.org/gems/spreadsheet/versions/1.3.0?locale=en
-  require "spreadsheet" 
-  #Next we set the encoding. This is the default setting but can be changed here
-  Spreadsheet.client_encoding='UTF-8'
-  
-  #Now we define a mode. Each mode will direct the function to a different loop to produce different types of data.
-  #"straight" mode keeps data organized by location, ex. Baly Cottage => B43.32-53,location
-  #"CatNum" mode interprets each range and re-organizes it to read B43.32 => Baly Cottage, location
-
-
-
-  #we now create our spreadsheet file
-  book=Spreadsheet::Workbook.new
-  mainsheet=book.create_worksheet
-  
-  #we then collect the title of the group and name our sheet after it
-  collectionTitle=bigarray[0]
-  mainsheet.name = collectionTitle
-
-  #we define a disclaimer to populate the top left cell, identifying that it was produced by code
-  disclaimer= "This is an automatically generated spreadsheet titled \'" + collectionTitle + ".\' Please review the information before copying into permanent data storage."
-  mainsheet[0,0] = disclaimer
-  
-  if mode=="straight"
-
-    #then we make titles for each column
-    mainsheet[1,0]="Title"
-    mainsheet[1,1]="Description"
-    mainsheet[1,2]="Longitude"
-    mainsheet[1,3]="Latitude"
-
-    #with our title and disclaimer made, we move into our main loop
-    #the writing will take place one row at a time, and will be based on the list of keys (bigarray[1])
-
-    for i in 2..bigarray[1].length
-      #gather info
-      title = bigarray[1][i]
-      description=bigarray[2][title]
-      location=bigarray[3][title]
-    
-      #while most of the data is ready to input, the locations are still a string tuple.
-      #we must split this into its parts before entry
-
-      locationTuple = splitLocations location
-
-      #populate info
-      mainsheet[i,0]=title
-      mainsheet[i,1]=description
-      mainsheet[i,2]=locationTuple[0]
-      mainsheet[i,3]=locationTuple[1]
-    end 
-  end
-
-  if mode == "CatNum"
-    titlesToMentions=Hash.new
-    upperslides=Array.new
-    lowerslides=Array.new
-    for i in 0...bigarray[1].length
-      activetitle=bigarray[1][i]
-      desc = bigarray[2][activetitle]
-      puts desc
-      
-      if desc.class != NilClass
-
-        if desc.include? "-"
-          smallerarray = parseSlideRange desc
-          lowerslides.push smallerarray[1]
-          upperslides.push smallerarray[2]
-          titlesToMentions[activetitle]=smallerarray[0]
-        elsif desc.length > 5
-          slide=desc[..6]
-          lowerslides.push slide
-          upperslides.push slide
-          titlesToMentions[activetitle]=[slide]
-        end
-      end
-    end
-    lastblock=2
-
-    #populate spreadsheet
-    mainsheet[1,0]="Cat#"
-    mainsheet[1,1]="Slide Title"
-    mainsheet[1,2]="Longitude"
-    mainsheet[1,3]="Latitude"
-
-    for i in 0...bigarray[1].length
-      activetitle=bigarray[1][i]
-      workinglist=titlesToMentions[activetitle]
-      location=bigarray[3][activetitle]
-      locationTuple=splitLocations location
-      if workinglist.class != NilClass
-        for j in 0...workinglist.length
-          mainsheet[lastblock,0]=workinglist[j]
-          mainsheet[lastblock,1]=activetitle
-          mainsheet[lastblock,2]=locationTuple[0]
-          mainsheet[lastblock,3]=locationTuple[1]
-          lastblock=lastblock+1
-        end
-      end
-    end
-  end
-
-
-  if filename != "blank"
-    book.write filename
-  else 
-    time=Time.now
-    minutes=time.min
-    seconds=time.sec
-
-    book.write collectionTitle+minutes.to_s + "." + seconds.to_s+".xls"
-  end
 end
 
 #This function reads an xlsfile and turns one column into an array. 
@@ -623,9 +501,9 @@ def readXLScolumn(xlsfile,worksheet,columnNum)
   require 'spreadsheet'
   Spreadsheet.client_encoding = 'UTF-8'
   book = Spreadsheet.open xlsfile
-  sheet=book.worksheet worksheet
+  sheet = book.worksheet worksheet
   
-  indexarray=Array.new
+  indexarray = Array.new
   sheet.each do |row|
     eachindex=row[columnNum]
     indexarray.push eachindex
