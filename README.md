@@ -10,8 +10,8 @@
     echo 'if which rbenv > /dev/null; then eval "$(rbenv init -)"; fi' >> ~/.zshrc
     source ~/.zshrc
 
-    rbenv install 3.3.5
-    rbenv global 3.3.5
+    rbenv install 3.3.0
+    rbenv global 3.3.0
     ```
 
     Now Ruby version 3.3 should be installed and set as default. To make sure everything is right, type 
